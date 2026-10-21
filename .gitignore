@@ -1,4 +1,92 @@
-bin
-obj
-.vscode
-.vs
+
+# ==========================================
+# .NET 10 LTS
+# ==========================================
+
+# Diretórios de compilação
+[Bb]in/
+[Oo]bj/
+out/
+
+# Publicação e artefatos
+publish/
+artifacts/
+app.publish/
+
+# Testes
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage-report/
+
+# Pacotes NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.sln.ide
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Configurações locais e segredos
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+.env
+.env.*
+!.env.example
+
+# Certificados e chaves privadas
+*.pfx
+*.p12
+*.key
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ferramentas de análise e IDE
+_ReSharper*/
+*.DotSettings.user
+
+# Cache local do .NET
+.dotnet/
+
+# Arquivos de cobertura e profiling
+*.prof
+*.profdata
+
+# Arquivos temporários de bancos de dados
+*.db-shm
+*.db-wal
+
+# Arquivos de backup
+*.orig
+*.rej
