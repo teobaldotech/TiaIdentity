@@ -1,3 +1,4 @@
+```csharp
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
@@ -33,6 +34,8 @@ namespace TiaIdentity
             string perfil,
             List<Claim>? outrasClaims = null)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(perfil);
+
             await LoginAsync(
                 login,
                 nome,
@@ -48,29 +51,41 @@ namespace TiaIdentity
             List<string>? perfis,
             List<Claim>? outrasClaims = null)
         {
-            if (string.IsNullOrWhiteSpace(login))
-                throw new ArgumentException("Informe o login.", nameof(login));
-
-            if (string.IsNullOrWhiteSpace(nome))
-                throw new ArgumentException("Informe o nome.", nameof(nome));
+            ArgumentException.ThrowIfNullOrWhiteSpace(login);
+            ArgumentException.ThrowIfNullOrWhiteSpace(nome);
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, login),
-                new Claim(ClaimTypes.Name, nome)
+                new(ClaimTypes.NameIdentifier, login),
+                new(ClaimTypes.Name, nome)
             };
 
-            if (perfis != null && perfis.Any())
+            if (perfis != null)
             {
                 claims.AddRange(
                     perfis
                         .Where(p => !string.IsNullOrWhiteSpace(p))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
                         .Select(p => new Claim(ClaimTypes.Role, p)));
             }
 
-            if (outrasClaims != null && outrasClaims.Any())
+            if (outrasClaims != null)
             {
-                claims.AddRange(outrasClaims);
+                foreach (var claim in outrasClaims)
+                {
+                    ArgumentNullException.ThrowIfNull(claim);
+
+                    if (claim.Type == ClaimTypes.NameIdentifier ||
+                        claim.Type == ClaimTypes.Name ||
+                        claim.Type == ClaimTypes.Role)
+                    {
+                        throw new ArgumentException(
+                            "Claims adicionais não podem substituir a identidade ou os perfis.",
+                            nameof(outrasClaims));
+                    }
+
+                    claims.Add(claim);
+                }
             }
 
             await EfetuarLoginAsync(lembrar, claims);
@@ -81,7 +96,8 @@ namespace TiaIdentity
             IEnumerable<Claim> claims)
         {
             var httpContext = _httpContextAccessor.HttpContext
-                ?? throw new InvalidOperationException("HttpContext não disponível.");
+                ?? throw new InvalidOperationException(
+                    "HttpContext não disponível.");
 
             var identity = new ClaimsIdentity(
                 claims,
@@ -105,60 +121,43 @@ namespace TiaIdentity
         public async Task LogoutAsync()
         {
             var httpContext = _httpContextAccessor.HttpContext
-                ?? throw new InvalidOperationException("HttpContext não disponível.");
+                ?? throw new InvalidOperationException(
+                    "HttpContext não disponível.");
 
             await httpContext.SignOutAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme);
         }
 
-        public string? LoginUsuario
-        {
-            get
-            {
-                return _httpContextAccessor.HttpContext?
-                    .User?
-                    .FindFirst(ClaimTypes.NameIdentifier)?
-                    .Value;
-            }
-        }
+        public string? LoginUsuario =>
+            _httpContextAccessor.HttpContext?
+                .User?
+                .FindFirst(ClaimTypes.NameIdentifier)?
+                .Value;
 
-        public string? NomeUsuario
-        {
-            get
-            {
-                return _httpContextAccessor.HttpContext?
-                    .User?
-                    .Identity?
-                    .Name;
-            }
-        }
+        public string? NomeUsuario =>
+            _httpContextAccessor.HttpContext?
+                .User?
+                .Identity?
+                .Name;
 
-        public bool EstaAutenticado
-        {
-            get
-            {
-                return _httpContextAccessor.HttpContext?
-                    .User?
-                    .Identity?
-                    .IsAuthenticated ?? false;
-            }
-        }
+        public bool EstaAutenticado =>
+            _httpContextAccessor.HttpContext?
+                .User?
+                .Identity?
+                .IsAuthenticated ?? false;
 
-        public List<string> Perfis
-        {
-            get
-            {
-                return _httpContextAccessor.HttpContext?
-                    .User?
-                    .FindAll(ClaimTypes.Role)
-                    .Select(x => x.Value)
-                    .ToList()
-                    ?? new List<string>();
-            }
-        }
+        public List<string> Perfis =>
+            _httpContextAccessor.HttpContext?
+                .User?
+                .FindAll(ClaimTypes.Role)
+                .Select(claim => claim.Value)
+                .ToList()
+            ?? new List<string>();
 
         public string? ObterClaim(string tipo)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tipo);
+
             return _httpContextAccessor.HttpContext?
                 .User?
                 .FindFirst(tipo)?
@@ -167,9 +166,12 @@ namespace TiaIdentity
 
         public bool PossuiPerfil(string perfil)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(perfil);
+
             return _httpContextAccessor.HttpContext?
                 .User?
                 .IsInRole(perfil) ?? false;
         }
     }
 }
+```
